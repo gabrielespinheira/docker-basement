@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  wordpress:
+    container_name: wordpress
+    build:
+      context: ./../environment/php-fpm
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASS}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      MYSQL_PORT_3306_TCP: ${DB_PORT}
+      PHP_EXTENSION_XDEBUG: 1
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./../environment/php-fpm/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+    links:
+      - mysql
+
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    volumes:
+      - ./../environment/nginx:/etc/nginx/conf.d
+      - ./wordpress:/var/www/html
+    ports:
+      - ${WP_PORT}:80
+    links:
+      - wordpress
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.0.26
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - ${DB_PORT}:3306
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+    volumes:
+      - mysql_wp_data:/var/lib/mysql
+      - ./../environment/mysql:/etc/mysql/conf.d
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin:5.1.1
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_PASS}
+    restart: always
+    ports:
+      - ${PMA_PORT}:80
+    volumes:
+      - /sessions
+
+volumes:
+  mysql_wp_data:

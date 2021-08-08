@@ -5,7 +5,7 @@
 - [x] MongoDB
 - [x] WordPress
 - [x] PHPMyAdmin
+- [x] Node
 - [ ] Composer
 - [ ] nginx
 - [ ] PHP
-- [ ] NPM e Yarn
